@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.yelp.model.Adiacenza;
 import it.polito.tdp.yelp.model.Business;
 import it.polito.tdp.yelp.model.Model;
 import it.polito.tdp.yelp.model.Review;
@@ -49,17 +50,50 @@ public class FXMLController {
     	String citta = this.cmbCitta.getValue();
     	if(citta != null) {
     		//TODO popolare la tendina dei locali per la città selezionata
-    		
+    		this.cmbLocale.getItems().addAll(model.getBusinessesCity(citta));
     	}
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	txtResult.clear();
+    	Business locale = this.cmbLocale.getValue();
+    	if(locale==null) {
+    		txtResult.setText("Errore - per creare il grafo scegliere un business dopo aver scelto una città");
+    		return;
+    	}
+    	
+    	this.model.creaGrafo(locale);
+    	
+    	txtResult.setText("Grafo creato: ");
+    	txtResult.appendText(model.nVertici()+" vertici, "+model.nArchi()+" archi");
+    	
+    	List<Adiacenza> lista = model.getReviewMax();
+    	
+    	txtResult.appendText("\n");
+    	
+    	for(Adiacenza a : lista) {
+    		txtResult.appendText("\n"+a);
+    	}
     	
     }
 
     @FXML
     void doTrovaMiglioramento(ActionEvent event) {
+    	
+    	if(!model.grafoCreato()) {
+    		txtResult.setText("Errore-creare prima il grafo");
+    		return;
+    	}
+    	
+    	model.preparaRicorsione();
+    	List<Review> best = model.getBest();
+    	
+    	txtResult.setText("Sequenza più lunga: ");
+    	for(Review r : best)
+    		txtResult.appendText("\n"+r);
+    	
+    	txtResult.appendText("\n\nDifferenza giorni: "+model.differenzaGiorni());
     	
     }
 
@@ -75,5 +109,8 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	this.cmbCitta.getItems().clear();
+    	this.cmbCitta.getItems().addAll(model.getCities());
     }
 }
